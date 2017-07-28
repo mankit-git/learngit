@@ -1,54 +1,9 @@
 #include <stdio.h>
-#include <linux/fb.h>
 #include <stdlib.h>
-#include <string.h>
-#include <strings.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <stdint.h>
-#include <sys/mman.h>
-#include <errno.h>
-#include <sys/ioctl.h>
+#include "jpeglib.h"
+#include "head.h"
 
-#define RED   2
-#define GREEN 1
-#define BLUE  0
-
-struct image_info
-{
-	int height;
-	int width;
-	int bpp;
-};
-
-struct header
-{
-	int16_t type;
-	int32_t size;
-	int16_t reserved1;
-	int16_t reserved2;
-	int32_t offbits;
-}__attribute__((packed));
-
-struct info
-{
-	int32_t size;
-	int32_t width;
-	int32_t height;
-	int16_t planes;
-
-	int16_t bit_count;
-	int32_t compression;
-	int32_t size_img;
-	int32_t X_pel;
-	int32_t Y_pel;
-	int32_t clrused;
-	int32_t clrImportant;
-}__attribute__((packed));
-
-char *init_lcd(struct fb_var_screeninfo *pvinfo)
+/*char *init_lcd(struct fb_var_screeninfo *pvinfo)
 {
 	int lcd = open("/dev/fb0", O_RDWR);
 	if(lcd == -1)
@@ -70,9 +25,9 @@ char *init_lcd(struct fb_var_screeninfo *pvinfo)
 	}
 
 	return fbmemy;
-}
+}*/
 
-char *load_bmp(char *bmpfile, struct image_info *pimgfo)
+unsigned char *load_bmp(char *bmpfile, struct image_info_bmp *pimgfo)
 {
 	struct header head;
 	struct info info;
@@ -105,8 +60,8 @@ char *load_bmp(char *bmpfile, struct image_info *pimgfo)
 	pimgfo->width  = info.width;
 	pimgfo->bpp    = info.bit_count; 
 
-	char *imgdata = calloc(1, head.size-head.offbits);
-	char *tmp = imgdata;
+	unsigned char *imgdata = calloc(1, head.size-head.offbits);
+	unsigned char *tmp = imgdata;
 	int n, btyes_to_read = head.size-head.offbits;
 
 	while(btyes_to_read > 0)
@@ -120,8 +75,8 @@ char *load_bmp(char *bmpfile, struct image_info *pimgfo)
 	
 }
 
-void display_bmp(char *fbmemy, struct fb_var_screeninfo *pvinfo, char *imgdata,
-		struct image_info *pimgfo, int xoffset, int yoffset)
+void display_bmp(unsigned char *fbmemy, struct fb_var_screeninfo *pvinfo, unsigned char *imgdata,
+		struct image_info_bmp *pimgfo, int xoffset, int yoffset)
 {
 	int pad = (4-(pimgfo->width * pimgfo->bpp/8) % 4)% 4;
 	printf("pad: %d\n", pad);
@@ -148,24 +103,20 @@ void display_bmp(char *fbmemy, struct fb_var_screeninfo *pvinfo, char *imgdata,
 }
 
 
-
-int main(int argc, char **argv)
+/*bool show_bmp(char *filename)
 {
-	struct fb_var_screeninfo vinfo;
-	char *fbmemy = init_lcd(&vinfo);
+	struct fb_var_screeninfo bvinfo;
+	char *fbmem = init_lcd(&bvinfo);
 
 	printf("lcd height: %d\n", vinfo.yres);
 	printf("lcd width: %d\n", vinfo.xres);
 	printf("lcd bpp: %d\n", vinfo.bits_per_pixel);
 
-	struct image_info imgfo;
-	char *imgdata = load_bmp(argv[1], &imgfo);
+	struct image_info_bmp bimgfo;
+	char *imgdata = load_bmp(argv[1], &bimgfo);
 
 	printf("img height: %d\n", imgfo.height);
 	printf("img width: %d\n", imgfo.width);
 	printf("img bpp: %d\n", imgfo.bpp);
 
-	display_bmp(fbmemy, &vinfo, imgdata, &imgfo, 5, 10);
-
-	return 0;
-}
+}*/
